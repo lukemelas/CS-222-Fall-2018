@@ -1,2 +1,2 @@
-# CS-222-Fall-2018
-Problem sets from CS 222 Fall 2018
+# CS 222 Fall 2018
+This repository holds code from CS 222 problem sets. 
