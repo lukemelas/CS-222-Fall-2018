@@ -1,0 +1,166 @@
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage{fullpage} % Package to use full page
+\usepackage{parskip} % Package to tweak paragraph skipping
+\usepackage{tikz} % Package for drawing
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{common}
+
+\title{CS 222 Assignment 1}
+\author{Luke Melas-Kyriazi}
+\date{October 2, 2018}
+
+\begin{document}
+
+\maketitle
+
+\section{Generalized Fibonacci Numbers}
+Consider the generalized Fibonacci numbers $F_d$. The definition of generalized Fibonacci sequences is that the next number in the sequence is the sum of the previous $d$ numbers. In matrix form, this means that the first row of the matrix is all zeros, and all remaining rows simply contain an index corresponding to the row above it (visually forming a diagonal). Examples with $d=2,3,4,5$ are shown below:
+
+\[ M_2 = \begin{pmatrix} 1 & 1 \\ 1 & 0 \end{pmatrix}, \quad
+   M_3 = \begin{pmatrix} 1 & 1 & 1 \\ 1 & 0 & 0 \\ 0 & 1 & 0 \end{pmatrix}, \quad
+   M_4 = \begin{pmatrix} 1 & 1 & 1 & 1 \\ 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 1 & 0  \end{pmatrix}, \quad
+   M_5 = \begin{pmatrix} 1 & 1 & 1 & 1 & 1 \\ 1 & 0 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 1 & 0 \end{pmatrix}
+\]
+
+The largest eigenvalues of the matrices above were computed with a computer algebra system.
+
+\begin{center}
+\texttt{Largest eigevalue (d=2): 1.6180} \\
+\texttt{Largest eigevalue (d=3): 1.8392} \\
+\texttt{Largest eigevalue (d=4): 1.9275} \\
+\texttt{Largest eigevalue (d=5): 1.9659}
+\end{center}
+
+As in the case of the standard Fibonacci sequence $F_2$, the asymptotic growth rate of $F_d$ is exponential with base the largest eigenvalue of $M_d$. That is, the growth rate of $F_3$ is $\approx (1.839)^n$, the growth rate of $F_4$ is $\approx (1.928)^n$, and the growth rate of $F_5$ is $\approx (1.966)^n$.
+
+\section{Markov Chains}
+
+Let $\boldM$ be the transition matrix given in the problem statement. The stationary distribution $\pi$ is the left-eigenvector of $\boldM$ corresponding to eignenvalue $1$. Solving the equation $\pi \boldM = \boldM$ using a computer algebra system, we find the stationary distribution:
+\[ \pi = (0.28150134, 0.14745308, 0.31367292, 0.25737265) \]
+The probability vector after $10$ steps starting from the state $a = (1,0,0,0)$ is $a \boldM^{10}$, given by:
+\[ a \boldM^{10} = (0.28148165, 0.14746332, 0.31348351, 0.25757151) \]
+The probability vector after $100$ steps is $a \boldM^{100}$, given by:
+\[ a \boldM^{100} = (0.28150134, 0.14745308, 0.31367292, 0.25737265) \]
+Define the total variation distance from $\pi$ after $t$ steps as $V(t, \pi) = \tfrac{1}{2}\sum_x |P^t_{yx} - \pi(x)|$. With $\pi = d$, we can compute the minimum $t$ such that $V(\pi,t) < k$ for some threshold $k$. A table of results is shown below:
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{l|c|c|c}
+\textbf{Total Variation Distance Threshold} & 0.01 & 0.001 & 0.0001 \\ \hline
+Step & 6    & 8     & 12      \\
+\end{tabular}
+\end{center}
+\end{table}
+
+The total variation distance decreases monotonically with the number of steps $t$. After the chain has converged, the total variation distance occassionally increases marginally (on the order of $10^{-17}$) due to numerical precision errors, but it never increases in the process of converging. A plot of total variation distance vs. t is below:
+
+\begin{center}
+\includegraphics[width=0.6\textwidth]{images/tvd.png}
+\end{center}
+
+
+
+\section{Pagerank/HITS Scores}
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{l|c|c|c|c|c|c}
+            & a    & b    & c    & d    & e    & f    \\ \hline
+Pagerank    & 0.18655 & 0.09108 & 0.18264 & 0.155480 & 0.194188 & 0.190060 \\
+HITS Authorities:  & 0.00000 & 0.11393 & 0.59080 & 0.45489 & 0.65655 & 0.00000 \\
+HITS Hubs:         & 0.68444 & 0.50154 & 0.44689 & 0.28336 & 0.00000 & 0.00000
+\end{tabular}
+\end{center}
+\end{table}
+
+We implement the Pagerank and HITS algorithms and evaluate on the given transition matrix $\boldM$. For Pagerank, we use a uniformly random surfing probability of $0.15$. The final scores are given in the table above.
+
+For Pagerank, these scores were calculated by finding the eigenvectors of $(0.85 * \boldM + 0.15 * \boldE)$, where $\boldM$ is the normalized transition matrix. For HITS, the Authorities and Hubs scores were calculated with the algorithm on page 612.
+
+\section{Hub and Authority Scores}
+\textbf{Claim: } Suppose we obtain Hub/Authority scores in the following manner. For Authority scores, we move from a page $p_1$ to a page $p_3$ by following a random inlink from $p_1$ to $p_2$ and a random outlink from $p_2$ to $p_3$. For Hub scores, we move from a page $p_1$ to a page $p_3$ by following a random outlink from $p_1$ to $p_2$ and a random inlink from $p_2$ to $p_3$. Suppose that the Markov chain representing the transitions ($p_1 \to p_3$) is finite, irreducible, and aperiodic. Then the Authority score of a page is proportional to its number of inlinks and the Hub score of a page is proportional to its number of outlinks.
+
+\textbf{Proof: } As stated in the problem, we suppose the Markov chains defined above are finite, irreducible, and aperiodic. As a result, they have a unique stationary distribution. The unique stationary distribution of a Markov Chain is its principal eigenvector, so it suffices to show that the vectors described in the claim are eigenvectors with eigenvalue $1$.
+
+Note that the calculation of Authority scores and Hub scores do not depend on one another in the process described above. First, we consider the case of Authority scores.
+
+Denote the intermediate steps of the Authority-score Markov process by $x^{(1)} \to x^{(3)} \to x^{(2)}$ (corresponding to $p_1 \to p_3 \to p_2$ in the description above), such that a single step of the chain takes $x^{(1)}$ to $x^{(2)}$. Suppose $x^{(1)}$ is a vector with elements $x_i^{(1)}$ proportional to the number of inlinks of node $i$. The elements of the intermediate step $x^{(3)}$ are distributed proportional to the number of outlinks of each node:
+\[ x_i^{(3)} = \sum_{\substack{j \in \\ outneighbors(i)}} \frac{x_j^{(1)}}{ \# \text{\small inlinks of node } j } = \sum_{\substack{j \in \\ outneighbors(i)}} c = (\#\, outneighbors(i)) \cdot c \]
+\vspace{2mm}
+\[ x_i^{(3)} \propto (\#\, outneighbors(i)) \]
+So $x^{(3)}$ is distributed proportional to number of outlinks. Similarly, the next step $x^{(3)} \to x^{(2)}$ yields a vector $x^{(2)}$ distributed proportional to the number of inlinks of each node:
+\[ x_i^{(2)} = \sum_{\substack{j \in \\ inneighbors(i)}} \frac{x_j^{(3)}}{ \# \text{\small outlinks of node } j } = \sum_{\substack{j \in \\ inneighbors(i)}} c = (\#\, inneighbors(i)) \cdot c \]
+\vspace{2mm}
+\[ x_i^{(2)} \propto (\#\, inneighbors(i)) \]
+This shows that if $x^{(1)}$ is a unit vector proportional to the number of in-links, then $x^{(2)}$ be the same as $x^{(1)}$. Therefore $x^{(1)}$ is a principal eigenvector of the Markov chain and it is the stationary distribution of Authority scores.
+
+The proof that the stationary distribution of Hub scores is proportional to the number of outlinks is the same as the proof above, with inlinks and outlinks switched. That is, denote the sequence of intermediate steps by $y^{(1)} \to y^{(3)} \to y^{(2)}$. By the argument given above, if $y^{(1)}$ is proportional to the number of outlinks, then $y^{(3)}$ will be proportional to the number of inlinks (see the second formula above). Next, if $y^{(3)}$ is proportional to the number of inlinks, $y^{(2)}$ will be proportional to the number of outlinks. Therefore, if $y^{(1)}$ is proportional to the number of outlinks, it is the principal eigenvector, and thus the stationary distribution, of the Markov chain of Hubs scores.
+
+\section{Meta-Ranking}
+(1) Let the sequences $s_1, s_2$ be:
+\[ s_1 = q w e r t y u i o p a s d f g h j k l z x c v b n m \]
+\[ s_2 = e t a o n i h s r d l u m w c f g y p b v k q x j z \]
+Let $F(\cdot, \cdot)$ be the footrule distance and $K(\cdot, \cdot)$ be the Kendall-tau distance. Then:
+\[ F(s_1, s_2) = 180 \]
+\[ K(s_1, s_2) = 125 \]
+
+(2)
+Consider a set of partial rankings $\{s_i\}_{i=1}^6$ of the elements $\{A,B,C,D,E,F\}$ defined by:
+\[ s_1 = A B C D, s_2 = D F E C, s_3 = B E F A, s_4 = B C D E, s_5 = C F A B, s_6 = A E F D \]
+Their meta-rankings under $MC_3, MC_4$ were calculated by finding the exact stationary distributions of the corresponding Markov chains:
+\[ MC_3: (0.22273158, 0.26709875, 0.15275582, 0.06929076, 0.11344715, 0.17467594) \]
+\[ MC_4: (0.27272727, 0.22727273, 0.04545455, 0.04545455, 0.13636364, 0.27272727) \]
+These give the meta-rankings:
+\[ MC_3: B, A, F, C, E, D \]
+\[ MC_4: A/F,  B, E,  C/D \]
+Note that for $MC_4$, the scores of $A$ and $F$ (and $C$ and $D$) are the same.
+
+
+\section{Footrule and Kendall Relationship}
+\textbf{Claim: }Let $F(\cdot, \cdot)$ be the Footrule distance and $K(\cdot, \cdot)$ be the Kendall-tau distance. Then $F(\sigma, \tau) \leq 2 K(\sigma, \tau)$.
+
+\textbf{Proof: } % Let $\sigma$ and $\tau$ be ranked lists with $n$ elements. Denote the elements of $\sigma$ by $1, 2, \ldots, n$, (informally, we will consider $\sigma$ to be the ``identity'', and we will transform $\tau$ into $\sigma$).
+Let $K = K(\sigma, \tau)$ be the Kendall-tau distance between $\sigma$ and $\tau$. There exists a sequence of transpositions $t_1, t_2, \ldots, t_K$ transforming $\tau$ into $\sigma$ with $K$ transpositions (the smallest possible number of transposition). Denote by $\tau_i$ the intermediate list obtained by applying $t_1, \ldots, t_i$. For example, $\tau_0 = \sigma$, $\tau_1$ is the result of applying $t_1$ to $\sigma$, and so on, until $\tau_K = \tau$.
+
+Note that we have $F(\sigma, \tau_0) = F(\sigma, \sigma) = 0$.
+
+In each transposition, the footrule distance increases by at most 2: $F(\sigma, \tau_{i+1}) \leq F(\sigma, \tau_{i}) + 2$. This is the case because the change in the footrule distance is equal to the change in the absolute differences of the indices of the two swapped elements (because all other elements remain in the same places). Precisely, if transposition $t_i$ swaps elements $a$ and $b$, the change in the footrule distance is the sum of the changes for $a$ and $b$ (each bounded by 1), so it is bounded by 2:
+\[ \Delta F = \sum_{x=a,b} |\tau_{i+1}(x) - \sigma(x)| - |\tau_{i}(x) - \sigma(x)| \leq \sum_{x=a,b} |\tau_{i+1}(x) - \tau_{i}(x)| \leq 1 + 1 = 2 \]
+This result shows that the footrule distance increases by at most $2$ on each transposition $1,\ldots,K$. Using this inequality $K$ times and plugging in $F(\sigma, \tau_0) = 0$ yields the desired inequality:
+\[ F(\sigma, \tau) = F(\sigma, \tau_K) \leq F(\sigma, \tau) + 2 \cdot K\]
+\[ \implies F(\sigma, \tau) \leq 2 \cdot K(\sigma, \tau) \]
+
+% \newpage
+\section{Social Network Graphs}
+
+In this problem, we aim to construct graphs from the $Z_{n,m}$ family of random graphs. The challenge in constructing such graphs is that we have to sample nodes $x,y$ proportional to $(deg(x)+1)\cdot(deg(y)+1)$ without enumerating and sampling from all such edges $(x,y)$, because sampling from these pairs is computationally inefficient.
+
+To overcome this challenge, we factorize $p(x,y) = p(x) \cdot p(y)$ and draw $x$ and $y$ separately. We store the degrees of each node in a vector and initialize the vector with all $1$s. To add an edge to the graph, we sample $x$ and $y$ proportional to their degrees (plus 1) and consider the edge $(x,y)$. If this edge is already in the graph, we discard it and draw a new sample, and if this edge is not in the graph, we add it to the graph. With such a procedure, each edge is drawn proportional to $(\deg(x) + 1)(\deg(y) + 1)$. We continue until we have generated the desired number of edges.
+
+To calculate trianges efficiently, we first represent our graph with an $n \times n$ adjacency matrix $A$, with $1$s representing edges. If we matrix-multiplying $A$ by itself, the elements $A_{ij}^n$ of $A^n$ will be the number of paths from node $i$ to node $j$ in $n$ steps. To count the number of trianges, we need to compute the sum of the number of ways from node $i$ to node $i$ in $3$ steps, which is simply the trace of $A^3$. However, we count each triangle $6$ times in with this method (two directions for each of $3$ nodes), so we need to divide $A^3$ by $6$: triangles($A$) =  $\text{tr}(A^3) / 6$.
+
+\begin{table}[h!]
+\begin{center}
+% \textit{Average number of triangles in $100$ random graphs} \\
+% \vspace{2mm}
+\begin{tabular}{l|c}
+Graph type & Avg. \# Triangles \\ \hline
+$G_{100,250}$   & $20.77$ \\
+$Z_{100,250}$   & $100.46$ \\
+$G_{1000,5000}$ & $166.79$ \\
+$Z_{1000,5000}$ & $1161.79$ \\
+\end{tabular}
+\end{center}
+\end{table}
+
+% \nocite{*}
+% \bibliographystyle{apalike}
+% \bibliography{bibliography.bib}
+\end{document}
+
+% To overcome this challenge, we store a $n \times n$ matrix $P$ of (unnormalized) probabilities. Rather than sample directly from a $n^2$ vector of these probabilities, we factor $p(x,y) = p(x)p(y|x)$ and sample from each. First, to obtain an $x$ drawn from $p(x)$, we sum over $y$ (that is, over columns of $P$), normalize, and sample. Second, to obtain a $y$ drawn from $p(y|x)$, we take the vector corresponding to $x$ (that is, some column of $P$), normalize, and sample. This yields an edge $(x,y)$, which we add to our final graph. Finally, we update the corresponding rows and columns of the proability matrix $P$ by adding $1$, as the sampled nodes now have a larger degree.
